@@ -7,20 +7,18 @@ class StringUtils
     /**
      * 把数组所有元素，按照“参数=参数值”的模式用“&”字符拼接成字符串
      */
-    function createLinkstring($para, $isUrlencode = false)
+    public static function createLinkstring($para, $isUrlencode = false)
     {
         $arg = "";
         while (list ($key, $val) = each($para)) {
             $arg .= $key . "=" . $val . "&";
-            $arg .= $key . "=" . urlencode($val) . "&";
+            if ($isUrlencode)
+                $arg .= $key . "=" . urlencode($val) . "&";
         }
-        // 去掉最后一个&字符
         $arg = substr($arg, 0, count($arg) - 2);
         
-        // 如果存在转义字符，那么去掉转义
-        if (get_magic_quotes_gpc()) {
+        if (get_magic_quotes_gpc())
             $arg = stripslashes($arg);
-        }
         
         return $arg;
     }
@@ -47,10 +45,10 @@ class StringUtils
 
     /**
      * 除去数组中的空值和指定键名的值
-     * 
+     *
      * @param $arr 指定剔除键名的数组            
      */
-    public function paraFilter($para, $arr = array())
+    public static function paraFilter($para, $arr = array())
     {
         $para_filter = array();
         while (list ($key, $val) = each($para)) {
@@ -65,7 +63,7 @@ class StringUtils
     /**
      * 对数组排序
      */
-    function argSort($para)
+    public static function argSort($para)
     {
         ksort($para);
         reset($para);

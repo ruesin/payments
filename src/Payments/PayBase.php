@@ -3,9 +3,7 @@ namespace Ruesin\Payments;
 
 abstract class PayBase
 {
-    abstract function getPayForm();
+    abstract function getPayForm($order,$params);
     abstract function notify();
-    abstract function return();
-    abstract function notifyUrl();
-    abstract function returnUrl();
+    abstract function back();
 }
