@@ -14,7 +14,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Ruesin\\Payments\\": "src/Payments"
+            "Ruesin\\Payments\\": "src"
         }
     }
 }
