@@ -13,7 +13,7 @@ class Alipay extends PayBase
     const SERVICE = "create_direct_pay_by_user";
     //支付宝网关地址
     const GATEWAY = 'https://mapi.alipay.com/gateway.do?';
-    //签名类型
+    //签名类型 DSA、RSA、MD5
     const SIGN_TYPE = 'MD5';
     //字符编码格式
     const CHARSET = 'utf-8';
@@ -40,32 +40,31 @@ class Alipay extends PayBase
 
         $signParam = array(
             "service" => self::SERVICE,
-            "partner" => trim($this->config['alipay_partner']), //合作身份者id，以2088开头的16位纯数字
-            "_input_charset" => self::CHARSET,
+            "partner" => trim($this->config['alipay_partner']),
+            "_input_charset" => trim($this->config['input_charset']),
             "notify_url" => $this->config['notify_url'],
             "return_url" => $this->config['return_url'],
-            "sign_type" => $this->config['sign_type'], //签名方式
+            "sign_type" => $this->config['sign_type'],
             "sign" => '', //签名
             "out_trade_no" => $order['out_trade_no'],
             "subject" => $order['name'],
             "total_fee" => $order['money'],
-            "seller_id" => trim($this->config['alipay_account']),
+            "seller_id" => trim($this->config['alipay_partner']),
             "payment_type" => '1',
-            "body" => $order['body'],
+            "body" => $order['desc'],
                 //"exter_invoke_ip"=>$alipay_config['exter_invoke_ip'],
                 //"anti_phishing_key"=>$alipay_config['anti_phishing_key'],
         );
 
-        
+
         $fields = $this->buildRequestFields($signParam);
-
-        $this->buildRequestForm($fields, $params);
-
-        return [
-            'form_url' => self::GATEWAY,
+        
+        $formParam = array(
+            'action' => self::GATEWAY,
             'method' => 'get',
-            'fields' => $this->buildRequestPara($signParam),
-        ];
+            'text'   => 'Connect gateway...'
+        );
+        return $this->buildRequestForm($fields, $formParam);
     }
 
     /**
@@ -73,7 +72,7 @@ class Alipay extends PayBase
      *
      * @author Ruesin
      */
-    public static function buildRequestFields($para_temp)
+    public function buildRequestFields($para_temp)
     {
 
         $para_filter = StringUtils::paraFilter($para_temp, array('sign', 'sign_type'));
@@ -100,7 +99,7 @@ class Alipay extends PayBase
         $mysign = "";
         switch (strtoupper(trim($this->config['sign_type']))) {
             case "MD5" :
-                $mysign = md5($prestr . $this->config['key']);
+                $mysign = md5($prestr . $this->config['md5_key']);
                 break;
             default :
                 $mysign = "";
@@ -113,6 +112,8 @@ class Alipay extends PayBase
     {
         if (!$params['sign_type'])
             $params['sign_type'] = self::SIGN_TYPE;
+        if (!$params['input_charset'])
+            $params['input_charset'] = self::CHARSET;
         $this->config = $params;
     }
 

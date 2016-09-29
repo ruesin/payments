@@ -11,17 +11,19 @@ trait SubmitForm {
      */
     function buildRequestForm($fields, $params) {
         
-        $sHtml = "<form id='paymentSubmitForm' name='paymentSubmitForm' action='".$params['action']."' method='".$params['method'] ? $params['method'] : 'get'."'>";
+        $method = $params['method'] ? $params['method'] : 'get';
+        
+        $sHtml = "<form id='paymentSubmitForm' name='paymentSubmitForm' action='".$params['action']."' method='".$method."'>";
         
         while (list ($key, $val) = each ($fields)) {
-            $sHtml.= "<input type='hidden' name='".$key."' value='".$val."'/>";
+            $sHtml.= "<input type='hidden' name='".$key."' value='".$val."'/>".PHP_EOL;
         }
         
-        if ($params['button']){
+        if (isset($params['button'])){
             $sHtml .= "<input type='submit'  value='".$params['button']."' style='display:none;'></form>";
         }
         
-        if ($params['text']) {
+        if (isset($params['text'])) {
             $sHtml .= '<b>'.$params['text'].'</b>';
         }
     
