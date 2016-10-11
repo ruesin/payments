@@ -4,14 +4,6 @@ require __DIR__.'/../../autoload.php';
 
 use Ruesin\Payments\Alipay;
 
-$alipay = new Alipay();
-
-$order = array(
-    'out_trade_no' => 'N123456789',
-    'name'         => '2016秋季新款格子衫衬衣',
-    'money'        => '59.80',
-    'desc'         => '新款潮流格子衫，引领时尚！'
-);
 $params = array(
     'notify_url' => 'http://localhost/alipay/notify.html',
     'return_url' => 'http://localhost/alipay/return.html',
@@ -21,7 +13,17 @@ $params = array(
     'md5_key'        => 'abcdefghijklmnopqrst'
 );
 
-$html = $alipay->getPayForm($order, $params);
+$alipay = new Alipay($params);
+
+$order = array(
+    'out_trade_no' => 'N123456789',
+    'name'         => '2016秋季新款格子衫衬衣',
+    'money'        => '59.80',
+    'desc'         => '新款潮流格子衫，引领时尚！'
+);
+
+
+$html = $alipay->getPayForm($order);
 
 echo '<pre>';
 var_dump($html);
