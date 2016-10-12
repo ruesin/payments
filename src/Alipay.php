@@ -126,11 +126,8 @@ class Alipay extends PayBase
 
     function back()
     {
-        if (empty($_GET)) {
-            return false;
-        }
-        
-        $data = $_GET;
+        $data = $this->getNotifyData();
+        if (empty($data)) return false;
         
         // 验签
         $para_filter = StringUtils::paraFilter($data, array('sign','sign_type'));
@@ -143,8 +140,8 @@ class Alipay extends PayBase
         
         // 获取支付宝远程服务器ATN结果（验证是否是支付宝发来的消息）
         $responseTxt = 'false';
-        if (! empty($_GET["notify_id"])) {
-            $responseTxt = $this->getResponse($_GET["notify_id"]);
+        if (! empty($data["notify_id"])) {
+            $responseTxt = $this->getResponse($data["notify_id"]);
         }
         
         // $responsetTxt的结果不是true，与服务器设置问题、合作身份者ID、notify_id一分钟失效有关
@@ -153,9 +150,15 @@ class Alipay extends PayBase
             return false;
         }
         
-        if ($_GET['trade_status'] == 'TRADE_FINISHED' || $_GET['trade_status'] == 'TRADE_SUCCESS') {} else {}
+        if ($data['trade_status'] == 'TRADE_FINISHED' || $data['trade_status'] == 'TRADE_SUCCESS') {} else {}
         
         return true;
+    }
+    
+    private function getNotifyData(){
+        if ($_POST)
+            return $_POST;
+        return $_GET;
     }
 
     /**
