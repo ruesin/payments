@@ -118,7 +118,7 @@ class ByteUtils
      * @param $position 指定的开始位置            
      * @return 一个Integer类型的数据
      */
-    public static function bytesToInteger($bytes, $position)
+    public static function byteToInteger($bytes, $position)
     {
         $val = 0;
         $val = $bytes[$position + 3] & 0xff;
