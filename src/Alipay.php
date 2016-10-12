@@ -126,11 +126,8 @@ class Alipay extends PayBase
 
     function back()
     {
-        if (empty($_GET)) {
-            return false;
-        }
-        
-        $data = $_GET;
+        $data = $this->getNotifyData();
+        if (empty($data)) return false;
         
         // 验签
         $para_filter = StringUtils::paraFilter($data, array('sign','sign_type'));
@@ -156,6 +153,12 @@ class Alipay extends PayBase
         if ($_GET['trade_status'] == 'TRADE_FINISHED' || $_GET['trade_status'] == 'TRADE_SUCCESS') {} else {}
         
         return true;
+    }
+    
+    private function getNotifyData(){
+        if ($_POST)
+            return $_POST;
+        return $_GET;
     }
 
     /**
