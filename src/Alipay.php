@@ -118,26 +118,50 @@ class Alipay extends PayBase
             $params['input_charset'] = self::CHARSET;
         $this->config = $params;
     }
-
+    
     function notify()
     {
-        ;
+        $data = $this->verify();
+        if (! $data) {
+            echo 'fail';
+            return false;
+        }
+        
+        echo 'success';
+        return array(
+            'out_trade_no' => $data['out_trade_no'],
+            'data' => $data
+        );
     }
 
     function back()
     {
-        $data = $this->getNotifyData();
-        if (empty($data)) return false;
+        $data = $this->verify();
+        var_dump($data);
+        if (! $data) {
+            return false;
+        }
         
+        return array(
+            'out_trade_no' => $data['out_trade_no'],
+            'data' => $data
+        );
+    }
+    
+    private function verify()
+    {
+        //数据
+        $data = isset($_POST) && !empty($_POST) ? $_POST : $_GET;
+        
+        if (empty($data)) return false;
+    
         // 验签
         $para_filter = StringUtils::paraFilter($data, array('sign','sign_type'));
         $para_sort = StringUtils::argSort($para_filter);
         $mysign = $this->buildRequestMysign($para_sort);
-        
-        if ($mysign != $data['sign']) {
-            return false;
-        }
-        
+    
+        if ($mysign != $data['sign']) return false;
+    
         // 获取支付宝远程服务器ATN结果（验证是否是支付宝发来的消息）
         $responseTxt = 'false';
         if (! empty($data["notify_id"])) {
@@ -145,20 +169,14 @@ class Alipay extends PayBase
         }
         
         // $responsetTxt的结果不是true，与服务器设置问题、合作身份者ID、notify_id一分钟失效有关
-        // isSign的结果不是true，与安全校验码、请求时的参数格式（如：带自定义参数等）、编码格式有关
         if (! preg_match("/true$/i", $responseTxt)) {
             return false;
         }
-        
-        if ($data['trade_status'] == 'TRADE_FINISHED' || $data['trade_status'] == 'TRADE_SUCCESS') {} else {}
-        
-        return true;
-    }
     
-    private function getNotifyData(){
-        if ($_POST)
-            return $_POST;
-        return $_GET;
+        if ($data['trade_status'] == 'TRADE_FINISHED' || $data['trade_status'] == 'TRADE_SUCCESS') {} else {}
+    
+        return $data;
+    
     }
 
     /**
