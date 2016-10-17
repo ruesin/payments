@@ -119,6 +119,11 @@ class Alipay extends PayBase
         $this->config = $params;
     }
     
+    /**
+     * 异步通知 严格验证
+     *
+     * @author Ruesin
+     */
     function notify()
     {
         $data = $this->verify();
@@ -134,10 +139,14 @@ class Alipay extends PayBase
         );
     }
 
+    /**
+     * 同步通知 非严格验证
+     *
+     * @author Ruesin
+     */
     function back()
     {
-        $data = $this->verify();
-        var_dump($data);
+        $data = $this->verify(false);
         if (! $data) {
             return false;
         }
@@ -148,7 +157,14 @@ class Alipay extends PayBase
         );
     }
     
-    private function verify()
+    /**
+     * 校验通知请求
+     * 
+     * @param bool $strict 是否严格验证
+     *
+     * @author Ruesin
+     */
+    private function verify($strict = true)
     {
         //数据
         $data = isset($_POST) && !empty($_POST) ? $_POST : $_GET;
@@ -162,15 +178,10 @@ class Alipay extends PayBase
     
         if ($mysign != $data['sign']) return false;
     
-        // 获取支付宝远程服务器ATN结果（验证是否是支付宝发来的消息）
-        $responseTxt = 'false';
-        if (! empty($data["notify_id"])) {
-            $responseTxt = $this->getResponse($data["notify_id"]);
-        }
-        
-        // $responsetTxt的结果不是true，与服务器设置问题、合作身份者ID、notify_id一分钟失效有关
-        if (! preg_match("/true$/i", $responseTxt)) {
-            return false;
+        if ($strict){
+            $responseTxt = 'false';
+            if (! empty($data["notify_id"])) $responseTxt = $this->getResponse($data["notify_id"]);
+            if (! preg_match("/true$/i", $responseTxt)) return false;
         }
     
         if ($data['trade_status'] == 'TRADE_FINISHED' || $data['trade_status'] == 'TRADE_SUCCESS') {} else {}
