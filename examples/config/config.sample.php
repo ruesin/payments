@@ -7,7 +7,7 @@ return array(
         'input_charset'  => 'utf-8',
         'sign_type'      => 'MD5',
         'md5_key'        => 'abcdefghijklmnopqrstuvwxyz123456',
-        'cacert'         => TEST_PATH.'alipay/config/cacert.pem',
+        'cacert'         => TEST_PATH.'config/cacert.pem',
     ),
     'malipay' => array(
         'notify_url' => 'http://local.payments.com/notify.php/malipay',
@@ -16,7 +16,8 @@ return array(
         'input_charset'  => 'utf-8',
         'sign_type'      => 'MD5',
         'md5_key'        => 'abcdefghijklmnopqrstuvwxyz123456',
-        'cacert'         => TEST_PATH.'alipay/config/cacert.pem',
+        'cacert'         => TEST_PATH.'config/cacert.pem',
+        'app_pay'    => 'Y', //唤起钱包APP支付宝
     )
 );
 

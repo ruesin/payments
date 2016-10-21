@@ -53,7 +53,7 @@ class Malipay extends PayBase
             "subject"	=> $order['name'],
             "total_fee"	=> $order['money'],
             "show_url"	=> $order['show_url'], //
-            //"app_pay"	=> "Y",//启用此参数能唤起钱包APP支付宝
+            "app_pay"	=> $this->config['app_pay'] != 'Y' ? '' : 'Y',
             "body" => $order['desc'],
         );
         
