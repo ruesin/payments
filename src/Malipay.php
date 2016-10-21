@@ -37,12 +37,13 @@ class Malipay extends PayBase
      *
      * @author Ruesin
      */
-    public function getPayForm($order,$params) {
-        $parameter = array(
+    public function getPayForm($order,$params = []) {
+        
+        $signParam = array(
             "service"       => self::SERVICE,
             "partner"       => $this->config['partner'],
             "seller_id"     => trim($this->config['partner']),
-            "payment_type"	=> $this->config['payment_type'],
+            "payment_type"	=> 1, //支付类型 仅支持：1（商品购买）
             "notify_url"	=> $this->config['notify_url'],
             "return_url"	=> $this->config['return_url'],
             "_input_charset"	=> $this->config['input_charset'],
@@ -83,6 +84,26 @@ class Malipay extends PayBase
         $para_sort['sign_type'] = strtoupper(trim($this->config['sign_type']));
     
         return $para_sort;
+    }
+    
+    /**
+     * 生成签名结果
+     *
+     * @author Ruesin
+     */
+    private function buildRequestMysign($para_sort)
+    {
+        $prestr = StringUtils::createLinkstring($para_sort);
+        $mysign = "";
+        switch (strtoupper(trim($this->config['sign_type']))) {
+            case "MD5":
+                $mysign = md5($prestr . $this->config['md5_key']);
+                break;
+            default:
+                $mysign = "";
+        }
+    
+        return $mysign;
     }
     
     public function notify(){
