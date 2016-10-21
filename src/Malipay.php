@@ -12,6 +12,8 @@ use Ruesin\Payments\Common\StringUtils;
 class Malipay extends PayBase
 {
     
+    use Common\SubmitForm;
+    
     const SERVICE = 'alipay.wap.create.direct.pay.by.user';
     
     const GATEWAY = 'https://mapi.alipay.com/gateway.do?';
