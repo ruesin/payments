@@ -1,5 +1,6 @@
 # 在线支付
 ## 为什么写
+封装出来可开箱即用的支付集合类，避免copy代码甚至重写的重复劳动，节省开发时间。
 ## 如何使用
 #### 2X01
 克隆到本地，假设放在项目中的 `vendors` 下。
@@ -43,8 +44,8 @@
 ```
 return array(
     'alipay' => array(
-        'notify_url' => 'http://local.payments.com/alipay/notify.php',
-        'return_url' => 'http://local.payments.com/alipay/return.php',
+        'notify_url' => 'http://local.payments.com/notify.php/alipay',
+        'return_url' => 'http://local.payments.com/return.php/alipay',
         'partner'    => '2088123456789012',
         'input_charset'  => 'utf-8',
         'sign_type'      => 'MD5',
