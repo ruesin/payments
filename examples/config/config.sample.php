@@ -9,7 +9,7 @@ return array(
         'md5_key'        => 'abcdefghijklmnopqrstuvwxyz123456',
         'cacert'         => TEST_PATH.'alipay/config/cacert.pem',
     ),
-    'alipay' => array(
+    'malipay' => array(
         'notify_url' => 'http://local.payments.com/notify.php/malipay',
         'return_url' => 'http://local.payments.com/return.php/malipay',
         'partner'    => '2088123456789012',
