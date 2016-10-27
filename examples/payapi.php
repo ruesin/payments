@@ -11,20 +11,20 @@
 				<tr>
 					<th>支付单号：</th>
 					<td><input type="text" name="order[out_trade_no]" value="<?=time()?>" /></td>
-					<th>支付金额：</th>
-					<td><input type="text" name="order[money]" value="0.01" /></td>
+					<th>  订单号：</th>
+					<td><input type="text" name="order[order_id]" value="<?=time()?>" /></td>
 				</tr>
 				<tr>
-					<th>商品名称：</th>
-					<td><input type="text" name="order[name]" value="支付测试" /></td>
-					<th>商品描述：</th>
+					<th>订单简述：</th>
+					<td><input type="text" name="order[subject]" value="支付测试" /></td>
+					<th>订单描述：</th>
 					<td><input type="text" name="order[desc]" value="支付测试描述" /></td>
 				</tr>
 				<tr>
 					<th>支付方式：</th>
 					<td><input type="text" name="payment" value="<?=$_GET['pay']?>" readonly /></td>
-					<th></th>
-					<td></td>
+					<th>支付金额：</th>
+					<td><input type="text" name="order[money]" value="0.01" /></td>
 				</tr>
     
                 <?php if($_GET['pay'] == 'malipay'):?>

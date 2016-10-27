@@ -69,4 +69,52 @@ class StringUtils
         reset($para);
         return $para;
     }
+    
+    
+    /**
+     * 数组转xml
+     **/
+    public static function arrayToXml($arr)
+    {
+        if (! is_array($arr) || count($arr) <= 0) {
+            return '<xml></xml>';
+        }
+        
+        $xml = "<xml>";
+        foreach ($arr as $key => $val) {
+            if (is_numeric($val)) {
+                $xml .= "<" . $key . ">" . $val . "</" . $key . ">";
+            } else {
+                $xml .= "<" . $key . "><![CDATA[" . $val . "]]></" . $key . ">";
+            }
+        }
+        $xml .= "</xml>";
+        return $xml;
+    }
+    
+    /**
+     * xml转数组
+     */
+    public static function XmlToArray($xml)
+    {
+        if(!$xml) return array();
+    
+        libxml_disable_entity_loader(true);
+        $array = json_decode(json_encode(simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
+        return $array;
+    }
+
+    /**
+     * 生成指定长度的随机字符串
+     */
+    public static function createNonceString($length = 32)
+    {
+        $chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+        $str = "";
+        for ($i = 0; $i < $length; $i ++) {
+            $str .= substr($chars, mt_rand(0, strlen($chars) - 1), 1);
+        }
+        return $str;
+    }
+    
 }

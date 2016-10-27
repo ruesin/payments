@@ -18,6 +18,13 @@ return array(
         'md5_key'        => 'abcdefghijklmnopqrstuvwxyz123456',
         'cacert'         => TEST_PATH.'config/cacert.pem',
         'app_pay'    => 'Y', //唤起钱包APP支付宝
+    ),
+    'wxnative' => array(
+        'notify_url' => 'http://local.payments.com/notify.php/wxnative',
+        'return_url' => 'http://local.payments.com/return.php/wxnative',
+        'appid' => 'wx426b3015555a46be', //绑定支付的APPID，开户邮件中可查看
+        'mch_id' => '1900009851', //商户号，开户邮件中可查看
+        'key' => '8934e7d15453e97507ef794cf7b0519d', // 商户支付密钥，参考开户邮件设置，登录商户平台自行设置
     )
 );
 
