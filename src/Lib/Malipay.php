@@ -1,61 +1,59 @@
 <?php
-namespace Ruesin\Payments;
+namespace Ruesin\Payments\Lib;
 
 use Ruesin\Payments\Common\StringUtils;
 
-class Alipay extends PayBase
+
+/**
+ * 移动支付宝支付
+ *
+ * @author Ruesin
+ */
+class Malipay extends PayBase
 {
     
     use Common\SubmitForm;
     
-    // 接口名称
-    const SERVICE = "create_direct_pay_by_user";
-    // 支付宝网关地址
-    const GATEWAY = 'https://mapi.alipay.com/gateway.do?';
-    // 签名类型 DSA、RSA、MD5
-    const SIGN_TYPE = 'MD5';
-    // 字符编码格式
-    const CHARSET = 'utf-8';
-
-    const TRANSPORT = 'http';
-    // 访问模式,根据自己的服务器是否支持ssl访问，若支持请选择https；若不支持请选择http
-    // # HTTPS形式消息验证地址
-    const HTTPS_VERIFY_URL = 'https://mapi.alipay.com/gateway.do?service=notify_verify&';
-    // # HTTP形式消息验证地址
-    const HTTP_VERIFY_URL = 'http://notify.alipay.com/trade/notify_query.do?';
+    const SERVICE = 'alipay.wap.create.direct.pay.by.user';
     
-    // 配置
-    private $config = [];
+    const GATEWAY = 'https://mapi.alipay.com/gateway.do?';
+    
+    const SIGN_TYPE = 'MD5';
+    
+    const CHARSET = 'utf-8';
+    
+    const TRANSPORT = 'http';
+    const HTTPS_VERIFY_URL = 'https://mapi.alipay.com/gateway.do?service=notify_verify&';
+    const HTTP_VERIFY_URL = 'http://notify.alipay.com/trade/notify_query.do?';
     
     public function __construct($params = []){
         $this->setConfig($params);
     }
-
+    
     /**
-     * 获取支付表单数据
-     *
-     * https://doc.open.alipay.com/doc2/detail.htm?spm=a219a.7629140.0.0.kiX33I&treeId=62&articleId=103740&docType=1
+     * 
+     * @see https://doc.open.alipay.com/docs/doc.htm?spm=a219a.7629140.0.0.yf7c4z&treeId=60&articleId=104790&docType=1
      *
      * @author Ruesin
      */
-    public function getPayForm($order,$params = [])
-    {
+    public function getPayForm($order,$params = []) {
+        
         $signParam = array(
-            "service" => self::SERVICE,
-            "partner" => trim($this->config['partner']),
-            "_input_charset" => trim($this->config['input_charset']),
-            "notify_url" => $this->config['notify_url'],
-            "return_url" => $this->config['return_url'],
+            "service"       => self::SERVICE,
+            "partner"       => $this->config['partner'],
+            "seller_id"     => trim($this->config['partner']),
+            "payment_type"	=> 1, //支付类型 仅支持：1（商品购买）
+            "notify_url"	=> $this->config['notify_url'],
+            "return_url"	=> $this->config['return_url'],
+            "_input_charset"	=> $this->config['input_charset'],
             "sign_type" => $this->config['sign_type'],
-            "sign" => '', // 签名
-            "out_trade_no" => $order['out_trade_no'],
-            "subject" => $order['name'],
-            "total_fee" => $order['money'],
-            "seller_id" => trim($this->config['partner']),
-            "payment_type" => '1',
+            "sign" => '',
+            "out_trade_no"	=> $order['out_trade_no'],
+            "subject"	=> $order['name'],
+            "total_fee"	=> $order['money'],
+            "show_url"	=> $order['show_url'],
+            "app_pay"	=> $this->config['app_pay'] != 'Y' ? '' : 'Y',
             "body" => $order['desc'],
-            // "exter_invoke_ip"=>$alipay_config['exter_invoke_ip'],
-            // "anti_phishing_key"=>$alipay_config['anti_phishing_key'],
         );
         
         $fields = $this->buildRequestFields($signParam);
@@ -67,7 +65,7 @@ class Alipay extends PayBase
         );
         return $this->buildRequestForm($fields, $formParam);
     }
-
+    
     /**
      * 生成请求数组
      *
@@ -75,21 +73,18 @@ class Alipay extends PayBase
      */
     public function buildRequestFields($para_temp)
     {
-        $para_filter = StringUtils::paraFilter($para_temp, array(
-            'sign',
-            'sign_type'
-        ));
-        
+        $para_filter = StringUtils::paraFilter($para_temp, array('sign','sign_type'));
+    
         $para_sort = StringUtils::argSort($para_filter);
-        
+    
         $mysign = $this->buildRequestMysign($para_sort);
-        
+    
         $para_sort['sign'] = $mysign;
         $para_sort['sign_type'] = strtoupper(trim($this->config['sign_type']));
-        
+    
         return $para_sort;
     }
-
+    
     /**
      * 生成签名结果
      *
@@ -106,26 +101,16 @@ class Alipay extends PayBase
             default:
                 $mysign = "";
         }
-        
+    
         return $mysign;
-    }
-
-    private function setConfig($params)
-    {
-        if (! $params['sign_type'])
-            $params['sign_type'] = self::SIGN_TYPE;
-        if (! $params['input_charset'])
-            $params['input_charset'] = self::CHARSET;
-        $this->config = $params;
     }
     
     /**
-     * 异步通知 严格验证
+     * 异步通知
      *
      * @author Ruesin
      */
-    function notify()
-    {
+    public function notify(){
         $data = $this->verify();
         if (! $data) {
             echo 'fail';
@@ -138,14 +123,14 @@ class Alipay extends PayBase
             'data' => $data
         );
     }
-
+    
     /**
-     * 同步通知 非严格验证
+     * 同步通知
      *
      * @author Ruesin
      */
-    function back()
-    {
+    public function back(){
+        
         $data = $this->verify(false);
         if (! $data) {
             return false;
@@ -159,16 +144,15 @@ class Alipay extends PayBase
     
     /**
      * 校验通知请求
-     * 
+     *
      * @param bool $strict 是否严格验证
      *
      * @author Ruesin
      */
     private function verify($strict = true)
     {
-        //数据
         $data = isset($_POST) && !empty($_POST) ? $_POST : $_GET;
-        
+    
         if (empty($data)) return false;
     
         // 验签
@@ -187,13 +171,23 @@ class Alipay extends PayBase
         if ($data['trade_status'] == 'TRADE_FINISHED' || $data['trade_status'] == 'TRADE_SUCCESS') {} else {}
     
         return $data;
-    
     }
-
+    
+    
+    private function setConfig($params)
+    {
+        if (! $params['sign_type'])
+            $params['sign_type'] = self::SIGN_TYPE;
+        if (! $params['input_charset'])
+            $params['input_charset'] = self::CHARSET;
+        $this->config = $params;
+    }
+    
+    
     /**
      * 获取远程服务器ATN结果,验证返回URL
-     * 
-     * @param $notify_id 通知校验ID            
+     *
+     * @param $notify_id 通知校验ID
      * @return 服务器ATN结果 验证结果集：
      * invalid命令参数不对 出现这个错误，请检测返回处理中partner和key是否为空
      * true 返回正确信息
@@ -208,7 +202,7 @@ class Alipay extends PayBase
             $veryfy_url = self::HTTP_VERIFY_URL;
         }
         $veryfy_url = $veryfy_url . "partner=" . trim($this->config['partner']) . "&notify_id=" . urldecode($notify_id);
-        
+    
         $responseTxt = $this->getHttpResponseGET($veryfy_url, $this->config['cacert']);
         return $responseTxt;
     }
@@ -231,9 +225,9 @@ class Alipay extends PayBase
         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2); // 严格认证
         curl_setopt($curl, CURLOPT_CAINFO, $cacert_url); // 证书地址
         $responseText = curl_exec($curl);
-        
+    
         curl_close($curl);
-        
+    
         return $responseText;
     }
 }

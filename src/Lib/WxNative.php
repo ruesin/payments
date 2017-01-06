@@ -1,5 +1,5 @@
 <?php
-namespace Ruesin\Payments;
+namespace Ruesin\Payments\Lib;
 
 use Ruesin\Payments\Common\StringUtils;
 

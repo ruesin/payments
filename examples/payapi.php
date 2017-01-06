@@ -16,7 +16,7 @@
 				</tr>
 				<tr>
 					<th>订单简述：</th>
-					<td><input type="text" name="order[subject]" value="支付测试" /></td>
+					<td><input type="text" name="order[name]" value="支付测试" /></td>
 					<th>订单描述：</th>
 					<td><input type="text" name="order[desc]" value="支付测试描述" /></td>
 				</tr>

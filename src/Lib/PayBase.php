@@ -1,5 +1,5 @@
 <?php
-namespace Ruesin\Payments;
+namespace Ruesin\Payments\Lib;
 
 abstract class PayBase
 {
