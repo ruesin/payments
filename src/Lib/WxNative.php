@@ -2,6 +2,7 @@
 namespace Ruesin\Payments\Lib;
 
 use Ruesin\Payments\Common\StringUtils;
+use Ruesin\Payments\Common\Request;
 
 class WxNative extends PayBase
 {
@@ -60,7 +61,8 @@ class WxNative extends PayBase
     {
         $params['sign'] = $this->buildRequestMysign($params);
         $xml = StringUtils::arrayToXml($params);
-        $response = $this->postXmlCurl($xml, self::UNIFIED_ORDER_URL);
+        
+        $response = Request::curl(self::UNIFIED_ORDER_URL,$xml);
         $result = StringUtils::XmlToArray($response);
         if ($result['return_code'] != 'SUCCESS') {
             return false;
@@ -96,48 +98,6 @@ class WxNative extends PayBase
             return false;
         }
         return true;
-    }
-    
-    
-    /**
-     * 以post方式提交xml到对应的接口url
-     *
-     * @param string $xml 需要post的xml数据
-     * @param string $url url
-     * @param bool $useCert 是否需要证书，默认不需要
-     * @param int $second url执行超时时间，默认30s
-     */
-    private function postXmlCurl($xml, $url, $useCert = false, $second = 30)
-    {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_TIMEOUT, $second);
-        curl_setopt($ch, CURLOPT_URL, $url);
-        // curl_setopt($ch,CURLOPT_SSL_VERIFYPEER,TRUE);
-        // curl_setopt($ch,CURLOPT_SSL_VERIFYHOST,2);//严格校验
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
-        curl_setopt($ch, CURLOPT_HEADER, FALSE);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-        
-        /*
-         * if($useCert == true){
-         * curl_setopt($ch,CURLOPT_SSLCERTTYPE,'PEM');
-         * curl_setopt($ch,CURLOPT_SSLCERT, WxPayConfig::SSLCERT_PATH);
-         * curl_setopt($ch,CURLOPT_SSLKEYTYPE,'PEM');
-         * curl_setopt($ch,CURLOPT_SSLKEY, WxPayConfig::SSLKEY_PATH);
-         * }
-         */
-        curl_setopt($ch, CURLOPT_POST, TRUE);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $xml);
-        $data = curl_exec($ch);
-        if ($data) {
-            curl_close($ch);
-            return $data;
-        } else {
-            $error = curl_errno($ch);
-            curl_close($ch);
-            return false;
-        }
     }
     
     // **********************************
@@ -203,7 +163,7 @@ class WxNative extends PayBase
         
         $xml = StringUtils::arrayToXml($input);
     
-        $response = $this->postXmlCurl($xml, self::QUERY_ORDER_URL);
+        $response = Request::curl(self::UNIFIED_ORDER_URL,$xml);
         
         $result = StringUtils::XmlToArray($response);
     
