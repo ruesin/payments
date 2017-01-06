@@ -12,7 +12,7 @@ use Ruesin\Payments\Common\StringUtils;
 class Malipay extends PayBase
 {
     
-    use Common\SubmitForm;
+    use \Ruesin\Payments\Common\SubmitForm;
     
     const SERVICE = 'alipay.wap.create.direct.pay.by.user';
     
@@ -26,8 +26,11 @@ class Malipay extends PayBase
     const HTTPS_VERIFY_URL = 'https://mapi.alipay.com/gateway.do?service=notify_verify&';
     const HTTP_VERIFY_URL = 'http://notify.alipay.com/trade/notify_query.do?';
     
-    public function __construct($params = []){
-        $this->setConfig($params);
+    private $config = [];
+    
+    public function __construct($config = [])
+    {
+        $this->setConfig($config);
     }
     
     /**
@@ -36,7 +39,7 @@ class Malipay extends PayBase
      *
      * @author Ruesin
      */
-    public function getPayForm($order,$params = []) {
+    public function getPayForm($order = [], $params = []) {
         
         $signParam = array(
             "service"       => self::SERVICE,

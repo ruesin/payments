@@ -27,8 +27,9 @@ class Alipay extends PayBase
     // 配置
     private $config = [];
     
-    public function __construct($params = []){
-        $this->setConfig($params);
+    public function __construct($config = [])
+    {
+        $this->setConfig($config);
     }
 
     /**
@@ -38,7 +39,7 @@ class Alipay extends PayBase
      *
      * @author Ruesin
      */
-    public function getPayForm($order,$params = [])
+    public function getPayForm($order = [], $params = [])
     {
         $signParam = array(
             "service" => self::SERVICE,

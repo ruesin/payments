@@ -12,17 +12,17 @@ class WxNative extends PayBase
     
     private $config = [];
 
-    public function __construct($params = [])
+    public function __construct($config = [])
     {
-        $this->setConfig($params);
+        $this->setConfig($config);
     }
-
+    
     /*
      * 
      * @see https://pay.weixin.qq.com/wiki/doc/api/native.php?chapter=9_1
      *
      */
-    public function getPayForm($order, $params = [])
+    public function getPayForm($order = [], $params = [])
     {
         $form = array(
             'appid'  => $this->config['appid'],
@@ -30,7 +30,7 @@ class WxNative extends PayBase
             'device_info' => 'WEB',
             'nonce_str' => StringUtils::createNonceString(),
             'sign'   => '',
-            'body'   => $order['subject'],
+            'body'   => $order['name'],
             'detail' => $params['order_detail'],
             'attach' => $params['order_attach'],
             'out_trade_no' => $order['out_trade_no'],

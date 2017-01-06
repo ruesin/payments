@@ -21,7 +21,7 @@ class PayLoader
             throw new \Exception('Payment does not exist!');
         }
         
-        return new $class($config,$params); 
+        return new $class($config); 
     }
     
     private static function formatParams($params)
