@@ -12,7 +12,7 @@
     <div style="width: 400px; margin: 0 auto">
         <table>
         <tr><td><a href="./payapi.php?pay=alipay">支付宝</a></td><td><a href="./payapi.php?pay=malipay">移动支付宝</a></td></tr>
-        <tr><td><a href="./payapi.php?pay=wxnative">微信扫码</a></td><td></td></tr>
+        <tr><td><a href="./payapi.php?pay=wxnative">微信扫码</a></td><td><a href="./payapi.php?pay=unionpay">银联在线</a></td></tr>
         <tr><td></td><td></td></tr>
         </table>
 	</div>

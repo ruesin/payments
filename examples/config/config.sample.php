@@ -25,7 +25,14 @@ return array(
         'appid' => 'wx426b3015555a46be', //绑定支付的APPID，开户邮件中可查看
         'mch_id' => '1900009851', //商户号，开户邮件中可查看
         'key' => '8934e7d15453e97507ef794cf7b0519d', // 商户支付密钥，参考开户邮件设置，登录商户平台自行设置
-    )
+    ),
+    'unionpay' => [
+        'notify_url' => 'http://cent.payments.com/notify.php/unionpay',
+        'return_url' => 'http://cent.payments.com/return.php/unionpay',
+        'merId'      => '777290058110048',//商户号
+        'sign_cert_path'   => '/data/html/payments/examples/config/unionpay/700000000000001_acp.pfx',
+        'sign_cert_pwd' => '000000'
+    ]
 );
 
 
