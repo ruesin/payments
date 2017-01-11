@@ -31,7 +31,8 @@ return array(
         'return_url' => 'http://cent.payments.com/return.php/unionpay',
         'merId'      => '777290058110048',//商户号
         'sign_cert_path'   => '/data/html/payments/examples/config/unionpay/700000000000001_acp.pfx',
-        'sign_cert_pwd' => '000000'
+        'sign_cert_pwd' => '000000',
+        'encrypt_cert_path' => '/data/html/payments/examples/config/unionpay/verify_sign_acp.cer'
     ]
 );
 
