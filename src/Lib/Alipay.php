@@ -112,15 +112,6 @@ class Alipay extends PayBase
         return $mysign;
     }
 
-    private function setConfig($params)
-    {
-        if (! $params['sign_type'])
-            $params['sign_type'] = self::SIGN_TYPE;
-        if (! $params['input_charset'])
-            $params['input_charset'] = self::CHARSET;
-        $this->config = $params;
-    }
-    
     /**
      * 异步通知 严格验证
      *
@@ -213,5 +204,14 @@ class Alipay extends PayBase
         
         $responseTxt = Request::curl($veryfy_url,'',2,$this->config['cacert'],3);
         return $responseTxt;
+    }
+    
+    protected function setConfig($config = [])
+    {
+        if (! $config['sign_type'])
+            $config['sign_type'] = self::SIGN_TYPE;
+        if (! $config['input_charset'])
+            $config['input_charset'] = self::CHARSET;
+        parent::setConfig($config);
     }
 }

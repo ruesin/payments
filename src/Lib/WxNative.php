@@ -101,11 +101,6 @@ class WxNative extends PayBase
     }
     
     // **********************************
-    private function setConfig($params)
-    {
-        $this->config = $params;
-    }
-
     public function back()
     {
         return true;

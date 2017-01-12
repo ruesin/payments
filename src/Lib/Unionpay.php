@@ -71,11 +71,6 @@ class Unionpay extends PayBase
         return $this->buildRequestForm($params, $formParam);
     }
     
-    private function setConfig($config = [])
-    {
-        $this->config = $config;
-    }
-
     public function notify()
     {
         $data = $this->verify($this->requestPostData());

@@ -176,17 +176,6 @@ class Malipay extends PayBase
         return $data;
     }
     
-    
-    private function setConfig($params)
-    {
-        if (! $params['sign_type'])
-            $params['sign_type'] = self::SIGN_TYPE;
-        if (! $params['input_charset'])
-            $params['input_charset'] = self::CHARSET;
-        $this->config = $params;
-    }
-    
-    
     /**
      * 获取远程服务器ATN结果,验证返回URL
      *
@@ -232,5 +221,14 @@ class Malipay extends PayBase
         curl_close($curl);
     
         return $responseText;
+    }
+    
+    protected function setConfig($config = [])
+    {
+        if (! $config['sign_type'])
+            $config['sign_type'] = self::SIGN_TYPE;
+        if (! $config['input_charset'])
+            $config['input_charset'] = self::CHARSET;
+        parent::setConfig($config);
     }
 }
