@@ -25,14 +25,6 @@ class Alipay extends PayBase
     // # HTTP形式消息验证地址
     const HTTP_VERIFY_URL = 'http://notify.alipay.com/trade/notify_query.do?';
     
-    // 配置
-    private $config = [];
-    
-    public function __construct($config = [])
-    {
-        $this->setConfig($config);
-    }
-
     /**
      * 获取支付表单数据
      *
@@ -44,16 +36,16 @@ class Alipay extends PayBase
     {
         $signParam = array(
             "service" => self::SERVICE,
-            "partner" => trim($this->config['partner']),
-            "_input_charset" => trim($this->config['input_charset']),
-            "notify_url" => $this->config['notify_url'],
-            "return_url" => $this->config['return_url'],
-            "sign_type" => $this->config['sign_type'],
+            "partner" => trim($this->getConfig('partner')),
+            "_input_charset" => trim($this->getConfig('input_charset')),
+            "notify_url" => $this->getConfig('notify_url'),
+            "return_url" => $this->getConfig('return_url'),
+            "sign_type" => $this->getConfig('sign_type'),
             "sign" => '', // 签名
             "out_trade_no" => $order['out_trade_no'],
             "subject"   => $order['name'],
             "total_fee" => $order['money'],
-            "seller_id" => trim($this->config['partner']),
+            "seller_id" => trim($this->getConfig('partner')),
             "payment_type" => '1',
             "body" => $order['desc'],
             // "exter_invoke_ip"=>$alipay_config['exter_invoke_ip'],
@@ -87,7 +79,7 @@ class Alipay extends PayBase
         $mysign = $this->buildRequestMysign($para_sort);
         
         $para_sort['sign'] = $mysign;
-        $para_sort['sign_type'] = strtoupper(trim($this->config['sign_type']));
+        $para_sort['sign_type'] = strtoupper(trim($this->getConfig('sign_type')));
         
         return $para_sort;
     }
@@ -101,9 +93,9 @@ class Alipay extends PayBase
     {
         $prestr = StringUtils::createLinkstring($para_sort);
         $mysign = "";
-        switch (strtoupper(trim($this->config['sign_type']))) {
+        switch (strtoupper(trim($this->getConfig('sign_type')))) {
             case "MD5":
-                $mysign = md5($prestr . $this->config['md5_key']);
+                $mysign = md5($prestr . $this->getConfig('md5_key'));
                 break;
             default:
                 $mysign = "";
@@ -200,9 +192,9 @@ class Alipay extends PayBase
         } else {
             $veryfy_url = self::HTTP_VERIFY_URL;
         }
-        $veryfy_url = $veryfy_url . "partner=" . trim($this->config['partner']) . "&notify_id=" . urldecode($notify_id);
+        $veryfy_url = $veryfy_url . "partner=" . trim($this->getConfig('partner')) . "&notify_id=" . urldecode($notify_id);
         
-        $responseTxt = Request::curl($veryfy_url,'',2,$this->config['cacert'],3);
+        $responseTxt = Request::curl($veryfy_url,'',2,$this->getConfig('cacert'),3);
         return $responseTxt;
     }
     

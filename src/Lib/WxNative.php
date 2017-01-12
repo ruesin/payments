@@ -11,13 +11,6 @@ class WxNative extends PayBase
     
     const QUERY_ORDER_URL = 'https://api.mch.weixin.qq.com/pay/orderquery';
     
-    private $config = [];
-
-    public function __construct($config = [])
-    {
-        $this->setConfig($config);
-    }
-    
     /*
      * 
      * @see https://pay.weixin.qq.com/wiki/doc/api/native.php?chapter=9_1
@@ -26,8 +19,8 @@ class WxNative extends PayBase
     public function buildRequestHtml($order = [], $params = [])
     {
         $form = array(
-            'appid'  => $this->config['appid'],
-            'mch_id' => $this->config['mch_id'],
+            'appid'  => $this->getConfig('appid'),
+            'mch_id' => $this->getConfig('mch_id'),
             'device_info' => 'WEB',
             'nonce_str' => StringUtils::createNonceString(),
             'sign'   => '',
@@ -41,7 +34,7 @@ class WxNative extends PayBase
             'time_start' => date('YmdHis'),
             'time_expire' => date('YmdHis', time() + 7200),
             //'goods_tag' => 'test',
-            'notify_url' => $this->config['notify_url'],
+            'notify_url' => $this->getConfig('notify_url'),
             'trade_type' => 'NATIVE',
             'product_id' => $order['order_id'],
             // 'limit_pay' => 'no_credit', //no_credit--指定不能使用信用卡支付
@@ -81,7 +74,7 @@ class WxNative extends PayBase
         $para_filter = StringUtils::paraFilter($params, array('sign'));
         $para_sort = StringUtils::argSort($para_filter);
         $string = StringUtils::createLinkstring($para_sort);
-        $result = strtoupper(md5($string . "&key=" . $this->config['key']));
+        $result = strtoupper(md5($string . "&key=" . $this->getConfig('key')));
         return $result;
     }
 
@@ -150,8 +143,8 @@ class WxNative extends PayBase
         if(!isset($input['out_trade_no']) && !isset($input['transaction_id'])){
             return false;
         }
-        $input['appid']   = $this->config['appid'];
-        $input['mch_id']  = $this->config['mch_id'];
+        $input['appid']   = $this->getConfig('appid');
+        $input['mch_id']  = $this->getConfig('mch_id');
         $input['nonce_str'] = StringUtils::createNonceString();
         
         $input['sign'] = $this->buildRequestMysign($input);

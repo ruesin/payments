@@ -10,13 +10,6 @@ class Unionpay extends PayBase
     // 前台交易请求地址
     const FRONT_TRANS_URL = 'https://101.231.204.80:5000/gateway/api/frontTransReq.do';
     
-    private $config = [];
-    
-    public function __construct($config = [])
-    {
-        $this->setConfig($config);
-    }
-    
     public function buildRequestHtml($order = [], $params = [])
     {
         $signParams = [
@@ -29,10 +22,10 @@ class Unionpay extends PayBase
             'txnSubType' => '01',//交易子类
             'bizType' => '000201',//产品业务类型
             'channelType' => '07',//渠道类型，07-PC，08-手机
-            'frontUrl' => $this->config['return_url'],  //前台通知地址~
-            'backUrl' => $this->config['notify_url'],	  //后台通知地址
+            'frontUrl' => $this->getConfig('return_url'),  //前台通知地址~
+            'backUrl' => $this->getConfig('notify_url'),	  //后台通知地址
             'accessType' => '0',//接入类型
-            'merId' => $this->config['merId'],//商户代码
+            'merId' => $this->getConfig('merId'),//商户代码
             'orderId' => $order["out_trade_no"],//商户订单号
             'txnTime' => date('YmdHis'),//订单发送时间
             'txnAmt' => intval($order['money'] * 100),//交易金额，单位分
@@ -167,12 +160,12 @@ class Unionpay extends PayBase
     private function getSignCert($key = '')
     {
         $result = [];
-        $pkcs12certdata = file_get_contents($this->config['sign_cert_path']);
+        $pkcs12certdata = file_get_contents($this->getConfig('sign_cert_path'));
         if ($pkcs12certdata === false) {
             return false;
         }
     
-        openssl_pkcs12_read($pkcs12certdata, $certs, $this->config['sign_cert_pwd']);
+        openssl_pkcs12_read($pkcs12certdata, $certs, $this->getConfig('sign_cert_pwd'));
         $x509data = $certs['cert'];
     
         openssl_x509_read($x509data);
@@ -194,7 +187,7 @@ class Unionpay extends PayBase
     private function getVerifyCert($key = '')
     {
         $result = [];
-        $x509data = file_get_contents($this->config['encrypt_cert_path']);
+        $x509data = file_get_contents($this->getConfig('encrypt_cert_path'));
         if($x509data === false ){
             return false;
         }
