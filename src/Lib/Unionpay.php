@@ -76,14 +76,39 @@ class Unionpay extends PayBase
         $this->config = $config;
     }
 
-    function notify()
-    {}
-
-    function back()
+    public function notify()
     {
+        $data = $this->verify($this->requestPostData());
+        if (! $data) {
+            return false;
+        }
         
-        $data = isset($_POST) && !empty($_POST) ? $_POST : $_GET;
+        return [
+            'out_trade_no' => $data['orderId'],
+            'data' => $data
+        ];
+    }
+
+    public function back()
+    {
+        $data = $this->verify($this->requestPostData());
+        if (! $data) {
+            return false;
+        }
         
+        return [
+            'out_trade_no' => $data['orderId'],
+            'data' => $data
+        ];
+    }
+    
+    /**
+     * 校验通知请求
+     *
+     * @author Ruesin
+     */
+    private function verify($data = [])
+    {
         if (empty($data)) return false;
         
         if (!isset($data['signature'])) return false;
@@ -104,10 +129,7 @@ class Unionpay extends PayBase
         
         if ($data['respCode'] == '00' || $data['respCode'] == 'A6') {} else {}
         
-        return array(
-            'out_trade_no' => $data['orderId'],
-            'data' => $data
-        );
+        return $data;
     }
     
     /**

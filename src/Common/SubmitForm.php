@@ -30,4 +30,24 @@ trait SubmitForm {
         
         return $sHtml;
     }
+
+    /**
+     * 获取POST数据
+     *
+     * @author Ruesin
+     */
+    public function requestPostData()
+    {
+        return isset($_POST) ? $_POST : [];
+    }
+    
+    /**
+     * 获取GET数据
+     *
+     * @author Ruesin
+     */
+    public function requestGetData()
+    {
+        return isset($_GET) ? $_GET : [];
+    }
 }
