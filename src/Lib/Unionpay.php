@@ -7,27 +7,8 @@ class Unionpay extends PayBase
 {
     use \Ruesin\Payments\Common\SubmitForm;
     
-    
     // 前台交易请求地址
     const FRONT_TRANS_URL = 'https://101.231.204.80:5000/gateway/api/frontTransReq.do';
-    
-//     APP交易请求地址:
-//     https://101.231.204.80:5000/gateway/api/appTransReq.do
-    
-//     后台交易请求地址:
-//     https://101.231.204.80:5000/gateway/api/backTransReq.do
-    
-//     后台交易请求地址(若为有卡交易配置该地址)：
-//     https://101.231.204.80:5000/gateway/api/cardTransReq.do
-    
-//     单笔查询请求地址:
-//     https://101.231.204.80:5000/gateway/api/queryTrans.do
-    
-//     批量交易请求地址:
-//     https://101.231.204.80:5000/gateway/api/batchTrans.do
-    
-//     文件传输类交易地址:
-//     https://101.231.204.80:9080/
     
     private $config = [];
     
@@ -36,9 +17,9 @@ class Unionpay extends PayBase
         $this->setConfig($config);
     }
     
-    public function getPayForm($order = [], $params = [])
+    public function buildRequestHtml($order = [], $params = [])
     {
-        $params = [
+        $signParams = [
             'version' => '5.0.0',//版本号
             'encoding' => 'UTF-8',//编码方式
             'certId'  => '', //证书ID
@@ -59,18 +40,35 @@ class Unionpay extends PayBase
             //'reqReserved' =>'透传信息',
         ];
         
-        $params['certId'] = $this->getSignCert('certId');
-        
-        if (!$this->buildSign($params)) return false;
+        $fields = $this->buildRequestFields($signParams);
         
         $formParam = array(
             'action' => self::FRONT_TRANS_URL,
             'method' => 'post',
             'text' => 'Connect gateway...'
         );
-        return $this->buildRequestForm($params, $formParam);
+        return $this->buildRequestForm($fields, $formParam);
     }
     
+    /**
+     * 生成请求字段
+     *
+     * @author Ruesin
+     */
+    private function buildRequestFields($params = [])
+    {
+        $params['certId'] = $this->getSignCert('certId');
+        
+        if (!$this->buildSign($params)) return false;
+        
+        return $params;
+    }
+    
+    /**
+     * 异步响应
+     *
+     * @author Ruesin
+     */
     public function notify()
     {
         $data = $this->verify($this->requestPostData());
@@ -84,6 +82,11 @@ class Unionpay extends PayBase
         ];
     }
 
+    /**
+     * 同步返回
+     *
+     * @author Ruesin
+     */
     public function back()
     {
         $data = $this->verify($this->requestPostData());

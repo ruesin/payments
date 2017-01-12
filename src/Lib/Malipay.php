@@ -39,7 +39,7 @@ class Malipay extends PayBase
      *
      * @author Ruesin
      */
-    public function getPayForm($order = [], $params = []) {
+    public function buildRequestHtml($order = [], $params = []) {
         
         $signParam = array(
             "service"       => self::SERVICE,
