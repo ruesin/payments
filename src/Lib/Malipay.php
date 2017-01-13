@@ -26,31 +26,31 @@ class Malipay extends PayBase
     const TRANSPORT = 'http';
     const HTTPS_VERIFY_URL = 'https://mapi.alipay.com/gateway.do?service=notify_verify&';
     const HTTP_VERIFY_URL = 'http://notify.alipay.com/trade/notify_query.do?';
-    
+
     /**
-     * 
+     *
      * @see https://doc.open.alipay.com/docs/doc.htm?spm=a219a.7629140.0.0.yf7c4z&treeId=60&articleId=104790&docType=1
      *
      * @author Ruesin
      */
-    public function buildRequestHtml($order = [], $params = []) {
-        
+    public function buildRequestHtml($order = [], $params = [])
+    {
         $signParam = array(
-            "service"       => self::SERVICE,
-            "partner"       => $this->getConfig('partner'),
-            "seller_id"     => trim($this->getConfig('partner')),
-            "payment_type"	=> 1, //支付类型 仅支持：1（商品购买）
-            "notify_url"	=> $this->getConfig('notify_url'),
-            "return_url"	=> $this->getConfig('return_url'),
-            "_input_charset"	=> $this->getConfig('input_charset'),
-            "sign_type" => $this->getConfig('sign_type'),
-            "sign" => '',
-            "out_trade_no"	=> $order['out_trade_no'],
-            "subject"	=> $order['name'],
-            "total_fee"	=> $order['money'],
-            "show_url"	=> $order['show_url'],
-            "app_pay"	=> $this->getConfig('app_pay') != 'Y' ? '' : 'Y',
-            "body" => $order['desc'],
+            "service"      => self::SERVICE,
+            "partner"      => $this->getConfig('partner'),
+            "seller_id"    => trim($this->getConfig('partner')),
+            "payment_type" => 1, // 支付类型 仅支持：1（商品购买）
+            "notify_url"   => $this->getConfig('notify_url'),
+            "return_url"   => $this->getConfig('return_url'),
+            "_input_charset" => $this->getConfig('input_charset'),
+            "sign_type"    => $this->getConfig('sign_type'),
+            "sign"         => '',
+            "out_trade_no" => $order['out_trade_no'],
+            "subject"      => $order['name'],
+            "total_fee"    => $order['money'],
+            "show_url"     => $order['show_url'],
+            "app_pay"      => $this->getConfig('app_pay') != 'Y' ? '' : 'Y',
+            "body"         => $order['desc']
         );
         
         $fields = $this->buildRequestFields($signParam);

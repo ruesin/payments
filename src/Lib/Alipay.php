@@ -35,21 +35,21 @@ class Alipay extends PayBase
     public function buildRequestHtml($order = [], $params = [])
     {
         $signParam = array(
-            "service" => self::SERVICE,
-            "partner" => trim($this->getConfig('partner')),
+            "service"      => self::SERVICE,
+            "partner"      => trim($this->getConfig('partner')),
             "_input_charset" => trim($this->getConfig('input_charset')),
-            "notify_url" => $this->getConfig('notify_url'),
-            "return_url" => $this->getConfig('return_url'),
-            "sign_type" => $this->getConfig('sign_type'),
-            "sign" => '', // 签名
+            "notify_url"   => $this->getConfig('notify_url'),
+            "return_url"   => $this->getConfig('return_url'),
+            "sign_type"    => $this->getConfig('sign_type'),
+            "sign"         => '', // 签名
             "out_trade_no" => $order['out_trade_no'],
-            "subject"   => $order['name'],
-            "total_fee" => $order['money'],
-            "seller_id" => trim($this->getConfig('partner')),
+            "subject"      => $order['name'],
+            "total_fee"    => $order['money'],
+            "seller_id"    => $this->getConfig('seller_id') ? $this->getConfig('seller_id') : $this->getConfig('partner'),
             "payment_type" => '1',
-            "body" => $order['desc'],
-            // "exter_invoke_ip"=>$alipay_config['exter_invoke_ip'],
-            // "anti_phishing_key"=>$alipay_config['anti_phishing_key'],
+            "body"         => $order['desc'],
+            "exter_invoke_ip"   => isset($params['ip']) ? $params['ip'] : '',
+            "anti_phishing_key" => $this->getConfig('anti_phishing_key') ? $this->getConfig('anti_phishing_key') : '',
         );
         
         $fields = $this->buildRequestFields($signParam);
@@ -96,6 +96,9 @@ class Alipay extends PayBase
         switch (strtoupper(trim($this->getConfig('sign_type')))) {
             case "MD5":
                 $mysign = md5($prestr . $this->getConfig('md5_key'));
+                break;
+            case "RSA" :
+                $mysign = $this->rsaSign($prestr, $this->getConfig('rsa_private_path'));
                 break;
             default:
                 $mysign = "";
@@ -206,4 +209,29 @@ class Alipay extends PayBase
             $config['input_charset'] = self::CHARSET;
         parent::setConfig($config);
     }
+
+    /**
+     * RSA签名
+     *
+     * @author Ruesin
+     * @date 2017年1月13日
+     */
+    protected function rsaSign($sign_str = '', $private_path = '')
+    {
+        $private_key = file_get_contents($private_path);
+        if ($private_key === false) {
+            return false;
+        }
+        $res = openssl_get_privatekey($private_key);
+        
+        if ($res) {
+            openssl_sign($data, $sign, $res);
+        } else {
+            return false;
+        }
+        openssl_free_key($res);
+        return base64_encode($sign);
+    }
+    
+    
 }

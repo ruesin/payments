@@ -19,26 +19,33 @@ class WxNative extends PayBase
     public function buildRequestHtml($order = [], $params = [])
     {
         $form = array(
-            'appid'  => $this->getConfig('appid'),
-            'mch_id' => $this->getConfig('mch_id'),
+            'appid'       => $this->getConfig('appid'),
+            'mch_id'      => $this->getConfig('mch_id'),
             'device_info' => 'WEB',
-            'nonce_str' => StringUtils::createNonceString(),
-            'sign'   => '',
-            'body'   => $order['name'],
-            'detail' => $params['order_detail'],
-            'attach' => $params['order_attach'],
+            'nonce_str'   => StringUtils::createNonceString(),
+            'sign'        => '',
+            'body'        => $order['name'],
+            'detail'      => $params['order_detail'],
+            'attach'      => $params['order_attach'],
             'out_trade_no' => $order['out_trade_no'],
-            'fee_type' => 'CNY',
-            'total_fee' => ceil($order['money'] * 100),
+            'fee_type'    => 'CNY',
+            'total_fee'   => ceil($order['money'] * 100),
             'spbill_create_ip' => $_SERVER['REMOTE_ADDR'],
-            'time_start' => date('YmdHis'),
+            'time_start'  => date('YmdHis'),
             'time_expire' => date('YmdHis', time() + 7200),
             //'goods_tag' => 'test',
             'notify_url' => $this->getConfig('notify_url'),
             'trade_type' => 'NATIVE',
             'product_id' => $order['order_id'],
-            // 'limit_pay' => 'no_credit', //no_credit--指定不能使用信用卡支付
+            'limit_pay'  => '', //no_credit--指定不能使用信用卡支付
         );
+        
+        if(isset($params['plat']) && $params['plat'] != 'web') {
+            $form['device_info'] = $params['plat'];
+        }
+        if (isset($params['no_credit']) && $params['no_credit'] == true) {
+            $form['limit_pay'] = 'no_credit';
+        }
         
         $result = $this->unifiedOrder($form);
         if (! $result)
