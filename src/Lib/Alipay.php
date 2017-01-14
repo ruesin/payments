@@ -3,6 +3,7 @@ namespace Ruesin\Payments\Lib;
 
 use Ruesin\Payments\Common\StringUtils;
 use Ruesin\Payments\Common\Request;
+use Ruesin\Payments\Common\SignUtils;
 
 class Alipay extends PayBase
 {
@@ -28,9 +29,9 @@ class Alipay extends PayBase
     {
         if (! $config['sign_type'])
             $config['sign_type'] = self::SIGN_TYPE;
-            if (! $config['input_charset'])
-                $config['input_charset'] = self::CHARSET;
-                parent::setConfig($config);
+        if (! $config['input_charset'])
+            $config['input_charset'] = self::CHARSET;
+        parent::setConfig($config);
     }
     
     /**
@@ -140,7 +141,6 @@ class Alipay extends PayBase
     {
         if (empty($data)) return false;
     
-        // 验签
         $para_filter = StringUtils::paraFilter($data, array('sign','sign_type'));
         $str = StringUtils::createLinkstring(StringUtils::argSort($para_filter));
         
@@ -162,15 +162,15 @@ class Alipay extends PayBase
      *
      * @author Ruesin
      */
-    private function buildSign($prestr = '')
+    private function buildSign($data = '')
     {
         $mysign = "";
         switch (strtoupper(trim($this->getConfig('sign_type')))) {
             case "MD5":
-                $mysign = md5($prestr . $this->getConfig('md5_key'));
+                $mysign = md5($data . $this->getConfig('md5_key'));
                 break;
             case "RSA" :
-                $mysign = $this->rsaSign($prestr, $this->getConfig('rsa_private_path'));
+                $mysign = SignUtils::rsaSign($data, $this->getConfig('rsa_private_path'));
                 break;
             default:
                 $mysign = "";
@@ -184,14 +184,14 @@ class Alipay extends PayBase
      *
      * @author Ruesin
      */
-    private function verifySign($prestr = '', $sign = '')
+    private function verifySign($data = '', $sign = '')
     {
         switch (strtoupper(trim($this->getConfig('sign_type')))) {
             case "MD5":
-                return (bool)(md5($prestr . $this->getConfig('md5_key')) == $sign);
+                return (bool)(md5($data . $this->getConfig('md5_key')) == $sign);
                 break;
             case "RSA" :
-                return (bool)$this->rsaVerify($prestr,$this->getConfig('rsa_public_path'),$sign);
+                return (bool)SignUtils::rsaVerify($data,$this->getConfig('rsa_public_path'),$sign);
                 break;
             default:
                 return false;
@@ -220,49 +220,6 @@ class Alipay extends PayBase
         
         $responseTxt = Request::curl($veryfy_url,'',2,$this->getConfig('cacert'),3);
         return $responseTxt;
-    }
-    
-    /**
-     * RSA签名
-     *
-     * @author Ruesin
-     */
-    protected function rsaSign($sign_str = '', $private_path = '')
-    {
-        $private_key = file_get_contents($private_path);
-        if ($private_key === false) {
-            return false;
-        }
-        $res = openssl_get_privatekey($private_key);
-        
-        if ($res) {
-            openssl_sign($sign_str, $sign, $res);
-        } else {
-            return false;
-        }
-        openssl_free_key($res);
-        return base64_encode($sign);
-    }
-    
-    /**
-     * rsa签名校验
-     *
-     * @author Ruesin
-     */
-    function rsaVerify($sign_str = '', $public_path = '', $sign = '')
-    {
-        $public_key = file_get_contents($public_path);
-        if ($public_key === false) {
-            return false;
-        }
-        $res = openssl_get_publickey($public_key);
-        if ($res) {
-            $result = (bool) openssl_verify($sign_str, base64_decode($sign), $res);
-        } else {
-            return false;
-        }
-        openssl_free_key($res);
-        return $result;
     }
     
 }

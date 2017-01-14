@@ -2,10 +2,14 @@
 namespace Ruesin\Payments\Lib;
 
 use Ruesin\Payments\Common\StringUtils;
+use Ruesin\Payments\Common\SignUtils;
 
 class Unionpay extends PayBase
 {
     use \Ruesin\Payments\Common\SubmitForm;
+    
+    private static $private = [];
+    private static $public = [];
     
     // 前台交易请求地址
     const FRONT_TRANS_URL = 'https://101.231.204.80:5000/gateway/api/frontTransReq.do';
@@ -50,9 +54,12 @@ class Unionpay extends PayBase
      */
     private function buildRequestFields($params = [])
     {
-        $params['certId'] = $this->getSignCert('certId');
+        $params['certId'] = $this->getPrivate('certId');
         
-        if (!$this->buildSign($params)) return false;
+        $para_filter = StringUtils::paraFilter($params, ['signature']);
+        $params = StringUtils::argSort($para_filter);
+        
+        $params['signature'] = $this->buildSign(StringUtils::createLinkstring($params));
         
         return $params;
     }
@@ -104,19 +111,11 @@ class Unionpay extends PayBase
         
         if (!isset($data['signature'])) return false;
         
-        $public_key = $this->getVerifyCert('key');
+        $params = StringUtils::argSort(StringUtils::paraFilter($data, ['signature']));
         
-        $signature_str = $data ['signature'];
-        unset ( $data ['signature'] );
-        $signature = base64_decode ( $signature_str );
+        $data = $this->verifySign(StringUtils::createLinkstring($params), base64_decode($data ['signature']));
         
-        $params_str = StringUtils::createLinkstring(StringUtils::argSort($data));
-        
-        $params_sha1x16 = sha1 ( $params_str, false );
-        
-        $isSuccess = openssl_verify ( $params_sha1x16, $signature, $public_key, OPENSSL_ALGO_SHA1 );
-        
-        if (!$isSuccess) return false;
+        if (!$data) return false;
         
         if ($data['respCode'] == '00' || $data['respCode'] == 'A6') {} else {}
         
@@ -128,28 +127,23 @@ class Unionpay extends PayBase
      *
      * @author Ruesin
      */
-    private function buildSign(&$params)
+    private function buildSign($data = '')
     {
-        if(isset($params['signature'])) {
-            unset($params['signature']);
-        }
+        $sign_falg = openssl_sign (sha1($data, false), $signature, $this->getPrivate('key'), OPENSSL_ALGO_SHA1 );
         
-        $params = StringUtils::argSort($params);
+        return $sign_falg ? base64_encode ( $signature ) : '';
+    }
+    
+    /**
+     * 验签
+     *
+     * @author Ruesin
+     */
+    private function verifySign($data = '', $sign = '')
+    {
+        $isSuccess = openssl_verify ( sha1($data, false), $sign, $this->getPublic('key'), OPENSSL_ALGO_SHA1 );
         
-        $params_str = StringUtils::createLinkstring($params);
-        
-        $params_sha1x16 = sha1 ( $params_str, FALSE );//摘要
-        
-        $private_key = $this->getSignCert('key');
-        
-        // 签名
-        $sign_falg = openssl_sign ( $params_sha1x16, $signature, $private_key, OPENSSL_ALGO_SHA1 );
-        
-        if (!$sign_falg) return false;
-        
-        $params ['signature'] = base64_encode ( $signature );
-        
-        return true;
+        return $isSuccess ? true : false;
     }
     
     /**
@@ -157,25 +151,15 @@ class Unionpay extends PayBase
      *
      * @author Ruesin
      */
-    private function getSignCert($key = '')
+    private function getPrivate($key = '')
     {
-        $result = [];
-        $pkcs12certdata = file_get_contents($this->getConfig('sign_cert_path'));
-        if ($pkcs12certdata === false) {
-            return false;
+        if (!self::$private) {
+            self::$private = SignUtils::getCertFromPfx($this->getConfig('sign_cert_path'),$this->getConfig('sign_cert_pwd'));
         }
-    
-        openssl_pkcs12_read($pkcs12certdata, $certs, $this->getConfig('sign_cert_pwd'));
-        $x509data = $certs['cert'];
-    
-        openssl_x509_read($x509data);
-        $certdata = openssl_x509_parse($x509data);
-        $result['certId'] = $certdata['serialNumber'];
-    
-        $result['key'] = $certs['pkey'];
-        $result['cert'] = $x509data;
-    
-        return $key ? $result[$key] : $result;
+        
+        if (!self::$private) return '';
+        
+        return $key ? self::$private[$key] : self::$private;
     }
     
     /**
@@ -184,19 +168,14 @@ class Unionpay extends PayBase
      * @author Ruesin
      * @date 2017年1月11日
      */
-    private function getVerifyCert($key = '')
+    private function getPublic($key = '')
     {
-        $result = [];
-        $x509data = file_get_contents($this->getConfig('encrypt_cert_path'));
-        if($x509data === false ){
-            return false;
+        if (!self::$public) {
+            self::$public = SignUtils::getCertFromCer($this->getConfig('encrypt_cert_path'));
         }
-        openssl_x509_read($x509data);
-        $certdata = openssl_x509_parse($x509data);
-        $result['certId'] = $certdata ['serialNumber'];
-        $result['key']    = $x509data;
+        if (!self::$public) return [];
         
-        return $key ? $result[$key] : $result;
+        return $key ? self::$public[$key] : self::$public;
     }
     
 }
