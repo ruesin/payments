@@ -8,6 +8,8 @@ return array(
         'sign_type'      => 'MD5',
         'md5_key'        => 'abcdefghijklmnopqrstuvwxyz123456',
         'cacert'         => TEST_PATH.'config/cacert.pem',
+        'rsa_private_path'  => TEST_PATH.'config/alipay/rsa_private_key.pem',
+        'rsa_public_path'  => TEST_PATH.'config/alipay/rsa_public_key.pem',
     ),
     'malipay' => array(
         'notify_url' => 'http://local.payments.com/notify.php/malipay',

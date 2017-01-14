@@ -9,21 +9,29 @@ class Alipay extends PayBase
     
     use \Ruesin\Payments\Common\SubmitForm;
     
-    // 接口名称
     const SERVICE = "create_direct_pay_by_user";
-    // 支付宝网关地址
+    
     const GATEWAY = 'https://mapi.alipay.com/gateway.do?';
-    // 签名类型 DSA、RSA、MD5
+    
     const SIGN_TYPE = 'MD5';
-    // 字符编码格式
+    
     const CHARSET = 'utf-8';
 
     const TRANSPORT = 'http';
-    // 访问模式,根据自己的服务器是否支持ssl访问，若支持请选择https；若不支持请选择http
-    // # HTTPS形式消息验证地址
+    
     const HTTPS_VERIFY_URL = 'https://mapi.alipay.com/gateway.do?service=notify_verify&';
-    // # HTTP形式消息验证地址
+    
     const HTTP_VERIFY_URL = 'http://notify.alipay.com/trade/notify_query.do?';
+    
+    
+    protected function setConfig($config = [])
+    {
+        if (! $config['sign_type'])
+            $config['sign_type'] = self::SIGN_TYPE;
+            if (! $config['input_charset'])
+                $config['input_charset'] = self::CHARSET;
+                parent::setConfig($config);
+    }
     
     /**
      * 获取支付表单数据
@@ -74,24 +82,88 @@ class Alipay extends PayBase
             'sign_type'
         ));
         
-        $para_sort = StringUtils::argSort($para_filter);
+        $fields = StringUtils::argSort($para_filter);
         
-        $mysign = $this->buildRequestMysign($para_sort);
+        $mysign = $this->buildSign(StringUtils::createLinkstring($fields));
         
-        $para_sort['sign'] = $mysign;
-        $para_sort['sign_type'] = strtoupper(trim($this->getConfig('sign_type')));
+        $fields['sign'] = $mysign;
+        $fields['sign_type'] = strtoupper(trim($this->getConfig('sign_type')));
         
-        return $para_sort;
+        return $fields;
     }
-
+    
+    /**
+     * 异步通知
+     *
+     * @author Ruesin
+     */
+    public function notify()
+    {
+        $data = $this->verify($this->requestPostData(),['strict'=>true]);
+        if (! $data) {
+            echo 'fail';
+            return false;
+        }
+    
+        echo 'success';
+        return array(
+            'out_trade_no' => $data['out_trade_no'],
+            'data' => $data
+        );
+    }
+    
+    /**
+     * 同步通知
+     *
+     * @author Ruesin
+     */
+    public function back()
+    {
+        $data = $this->verify($this->requestGetData(),['strict'=>false]);
+        if (! $data) {
+            return false;
+        }
+    
+        return array(
+            'out_trade_no' => $data['out_trade_no'],
+            'data' => $data
+        );
+    }
+    
+    /**
+     * 校验通知请求
+     *
+     * @param bool $strict 是否严格验证
+     * @author Ruesin
+     */
+    private function verify($data = [], $params = [])
+    {
+        if (empty($data)) return false;
+    
+        // 验签
+        $para_filter = StringUtils::paraFilter($data, array('sign','sign_type'));
+        $str = StringUtils::createLinkstring(StringUtils::argSort($para_filter));
+        
+        if ($this->verifySign($str,$data['sign']) !== true) return false;
+        
+        if (isset($params['strict']) && $params['strict'] == true){
+            $responseTxt = 'false';
+            if (! empty($data["notify_id"])) $responseTxt = $this->getResponse($data["notify_id"]);
+            if (! preg_match("/true$/i", $responseTxt)) return false;
+        }
+    
+        if ($data['trade_status'] == 'TRADE_FINISHED' || $data['trade_status'] == 'TRADE_SUCCESS') {} else {}
+        
+        return $data;
+    }
+    
     /**
      * 生成签名结果
      *
      * @author Ruesin
      */
-    private function buildRequestMysign($para_sort)
+    private function buildSign($prestr = '')
     {
-        $prestr = StringUtils::createLinkstring($para_sort);
         $mysign = "";
         switch (strtoupper(trim($this->getConfig('sign_type')))) {
             case "MD5":
@@ -106,76 +178,25 @@ class Alipay extends PayBase
         
         return $mysign;
     }
-
+    
     /**
-     * 异步通知 严格验证
+     * 校验签名
      *
      * @author Ruesin
      */
-    function notify()
+    private function verifySign($prestr = '', $sign = '')
     {
-        $data = $this->verify();
-        if (! $data) {
-            echo 'fail';
-            return false;
+        switch (strtoupper(trim($this->getConfig('sign_type')))) {
+            case "MD5":
+                return (bool)(md5($prestr . $this->getConfig('md5_key')) == $sign);
+                break;
+            case "RSA" :
+                return (bool)$this->rsaVerify($prestr,$this->getConfig('rsa_public_path'),$sign);
+                break;
+            default:
+                return false;
         }
-        
-        echo 'success';
-        return array(
-            'out_trade_no' => $data['out_trade_no'],
-            'data' => $data
-        );
-    }
-
-    /**
-     * 同步通知 非严格验证
-     *
-     * @author Ruesin
-     */
-    function back()
-    {
-        $data = $this->verify(false);
-        if (! $data) {
-            return false;
-        }
-        
-        return array(
-            'out_trade_no' => $data['out_trade_no'],
-            'data' => $data
-        );
-    }
-    
-    /**
-     * 校验通知请求
-     * 
-     * @param bool $strict 是否严格验证
-     *
-     * @author Ruesin
-     */
-    private function verify($strict = true)
-    {
-        //数据
-        $data = isset($_POST) && !empty($_POST) ? $_POST : $_GET;
-        
-        if (empty($data)) return false;
-    
-        // 验签
-        $para_filter = StringUtils::paraFilter($data, array('sign','sign_type'));
-        $para_sort = StringUtils::argSort($para_filter);
-        $mysign = $this->buildRequestMysign($para_sort);
-    
-        if ($mysign != $data['sign']) return false;
-    
-        if ($strict){
-            $responseTxt = 'false';
-            if (! empty($data["notify_id"])) $responseTxt = $this->getResponse($data["notify_id"]);
-            if (! preg_match("/true$/i", $responseTxt)) return false;
-        }
-    
-        if ($data['trade_status'] == 'TRADE_FINISHED' || $data['trade_status'] == 'TRADE_SUCCESS') {} else {}
-    
-        return $data;
-    
+        return false;
     }
 
     /**
@@ -187,7 +208,7 @@ class Alipay extends PayBase
      * true 返回正确信息
      * false 请检查防火墙或者是服务器阻止端口问题以及验证时间是否超过一分钟
      */
-    function getResponse($notify_id)
+    function getResponse($notify_id = '')
     {
         $veryfy_url = '';
         if (self::TRANSPORT == 'https') {
@@ -201,20 +222,10 @@ class Alipay extends PayBase
         return $responseTxt;
     }
     
-    protected function setConfig($config = [])
-    {
-        if (! $config['sign_type'])
-            $config['sign_type'] = self::SIGN_TYPE;
-        if (! $config['input_charset'])
-            $config['input_charset'] = self::CHARSET;
-        parent::setConfig($config);
-    }
-
     /**
      * RSA签名
      *
      * @author Ruesin
-     * @date 2017年1月13日
      */
     protected function rsaSign($sign_str = '', $private_path = '')
     {
@@ -225,7 +236,7 @@ class Alipay extends PayBase
         $res = openssl_get_privatekey($private_key);
         
         if ($res) {
-            openssl_sign($data, $sign, $res);
+            openssl_sign($sign_str, $sign, $res);
         } else {
             return false;
         }
@@ -233,5 +244,25 @@ class Alipay extends PayBase
         return base64_encode($sign);
     }
     
+    /**
+     * rsa签名校验
+     *
+     * @author Ruesin
+     */
+    function rsaVerify($sign_str = '', $public_path = '', $sign = '')
+    {
+        $public_key = file_get_contents($public_path);
+        if ($public_key === false) {
+            return false;
+        }
+        $res = openssl_get_publickey($public_key);
+        if ($res) {
+            $result = (bool) openssl_verify($sign_str, base64_decode($sign), $res);
+        } else {
+            return false;
+        }
+        openssl_free_key($res);
+        return $result;
+    }
     
 }
