@@ -59,7 +59,7 @@ class WxNative extends PayBase
 
     protected function unifiedOrder($params, $timeOut = 6)
     {
-        $params['sign'] = $this->buildRequestMysign($params);
+        $params['sign'] = $this->buildSign($params);
         $xml = StringUtils::arrayToXml($params);
         
         $response = Request::curl(self::UNIFIED_ORDER_URL,$xml);
@@ -76,7 +76,7 @@ class WxNative extends PayBase
     /**
      * 签名
      */
-    public function buildRequestMysign($params)
+    public function buildSign($params)
     {
         $para_filter = StringUtils::paraFilter($params, array('sign'));
         $para_sort = StringUtils::argSort($para_filter);
@@ -93,14 +93,13 @@ class WxNative extends PayBase
         if (! isset($params['sign']) || ! $params['sign']) {
             return false;
         }
-        $sign = $this->buildRequestMysign($params);
+        $sign = $this->buildSign($params);
         if ($params['sign'] != $sign) {
             return false;
         }
         return true;
     }
     
-    // **********************************
     public function back()
     {
         return true;
@@ -154,7 +153,7 @@ class WxNative extends PayBase
         $input['mch_id']  = $this->getConfig('mch_id');
         $input['nonce_str'] = StringUtils::createNonceString();
         
-        $input['sign'] = $this->buildRequestMysign($input);
+        $input['sign'] = $this->buildSign($input);
         
         $xml = StringUtils::arrayToXml($input);
     

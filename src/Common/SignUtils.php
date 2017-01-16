@@ -1,8 +1,29 @@
 <?php
 namespace Ruesin\Payments\Common;
 
-class SignUtils {
+class SignUtils
+{
     
+    /**
+     * MD5签名
+     *
+     * @author Ruesin
+     */
+    public static function md5Sign($data = '')
+    {
+        return md5($data);
+    }
+    
+    /**
+     * MD5验签
+     *
+     * @author Ruesin
+     */
+    public static function md5Verify($data = '',$signature = '')
+    {
+        return (bool)md5($data) == $signature;
+    }
+
     /**
      * RSA签名
      *
@@ -15,14 +36,14 @@ class SignUtils {
             return false;
         }
         $private_key = openssl_get_privatekey($cert);
-        if (!$private_key) {
+        if (! $private_key) {
             return false;
         }
-        openssl_sign ($data, $signature, $private_key);
+        openssl_sign($data, $signature, $private_key);
         openssl_free_key($private_key);
         return base64_encode($signature);
     }
-    
+
     /**
      * RSA验签
      *
@@ -43,7 +64,7 @@ class SignUtils {
         openssl_free_key($public_key);
         return $result;
     }
-    
+
     /**
      * pfx转证书
      *
@@ -57,22 +78,21 @@ class SignUtils {
         if ($pkcs12certdata === false) {
             return false;
         }
-    
+        
         openssl_pkcs12_read($pkcs12certdata, $certs, $password);
-    
+        
         openssl_x509_read($certs['cert']);
         $certdata = openssl_x509_parse($certs['cert']);
         
         $result = [
             'certId' => $certdata['serialNumber'],
-            'key'    => $certs['pkey'],
-            'cert'   => $certs['cert']
+            'key' => $certs['pkey'],
+            'cert' => $certs['cert']
         ];
         
         return $key ? $result[$key] : $result;
     }
-    
-    
+
     /**
      * 获取cert
      *
@@ -82,15 +102,15 @@ class SignUtils {
     {
         $result = [];
         $x509data = file_get_contents($path);
-        if($x509data === false ){
+        if ($x509data === false) {
             return false;
         }
         openssl_x509_read($x509data);
         $certdata = openssl_x509_parse($x509data);
         
         $result = [
-            'certId' => $certdata ['serialNumber'],
-            'key'    => $x509data,
+            'certId' => $certdata['serialNumber'],
+            'key' => $x509data
         ];
         
         return $key ? $result[$key] : $result;

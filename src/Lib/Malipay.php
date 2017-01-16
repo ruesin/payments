@@ -27,6 +27,15 @@ class Malipay extends PayBase
     const HTTPS_VERIFY_URL = 'https://mapi.alipay.com/gateway.do?service=notify_verify&';
     const HTTP_VERIFY_URL = 'http://notify.alipay.com/trade/notify_query.do?';
 
+    protected function setConfig($config = [])
+    {
+        if (! $config['sign_type'])
+            $config['sign_type'] = self::SIGN_TYPE;
+            if (! $config['input_charset'])
+                $config['input_charset'] = self::CHARSET;
+                parent::setConfig($config);
+    }
+    
     /**
      *
      * @see https://doc.open.alipay.com/docs/doc.htm?spm=a219a.7629140.0.0.yf7c4z&treeId=60&articleId=104790&docType=1
@@ -74,7 +83,7 @@ class Malipay extends PayBase
     
         $para_sort = StringUtils::argSort($para_filter);
     
-        $mysign = $this->buildRequestMysign($para_sort);
+        $mysign = $this->buildSign(StringUtils::createLinkstring($para_sort));
     
         $para_sort['sign'] = $mysign;
         $para_sort['sign_type'] = strtoupper(trim($this->getConfig('sign_type')));
@@ -83,32 +92,13 @@ class Malipay extends PayBase
     }
     
     /**
-     * 生成签名结果
-     *
-     * @author Ruesin
-     */
-    private function buildRequestMysign($para_sort)
-    {
-        $prestr = StringUtils::createLinkstring($para_sort);
-        $mysign = "";
-        switch (strtoupper(trim($this->getConfig('sign_type')))) {
-            case "MD5":
-                $mysign = md5($prestr . $this->getConfig('md5_key'));
-                break;
-            default:
-                $mysign = "";
-        }
-    
-        return $mysign;
-    }
-    
-    /**
      * 异步通知
      *
      * @author Ruesin
      */
-    public function notify(){
-        $data = $this->verify();
+    public function notify()
+    {
+        $data = $this->verify($this->requestPostData(),['strict'=>true]);
         if (! $data) {
             echo 'fail';
             return false;
@@ -126,9 +116,9 @@ class Malipay extends PayBase
      *
      * @author Ruesin
      */
-    public function back(){
-        
-        $data = $this->verify(false);
+    public function back()
+    {
+        $data = $this->verify($this->requestGetData(),['strict'=>false]);
         if (! $data) {
             return false;
         }
@@ -146,28 +136,65 @@ class Malipay extends PayBase
      *
      * @author Ruesin
      */
-    private function verify($strict = true)
+    private function verify($data = [], $params = [])
     {
-        $data = isset($_POST) && !empty($_POST) ? $_POST : $_GET;
-    
         if (empty($data)) return false;
     
-        // 验签
         $para_filter = StringUtils::paraFilter($data, array('sign','sign_type'));
-        $para_sort = StringUtils::argSort($para_filter);
-        $mysign = $this->buildRequestMysign($para_sort);
-    
-        if ($mysign != $data['sign']) return false;
-    
-        if ($strict){
+        $str = StringUtils::createLinkstring(StringUtils::argSort($para_filter));
+        
+        if ($this->verifySign($str,$data['sign']) !== true) return false;
+        
+        if (isset($params['strict']) && $params['strict'] == true){
             $responseTxt = 'false';
             if (! empty($data["notify_id"])) $responseTxt = $this->getResponse($data["notify_id"]);
             if (! preg_match("/true$/i", $responseTxt)) return false;
         }
-    
+        
         if ($data['trade_status'] == 'TRADE_FINISHED' || $data['trade_status'] == 'TRADE_SUCCESS') {} else {}
-    
+        
         return $data;
+    }
+    
+    /**
+     * 生成签名结果
+     *
+     * @author Ruesin
+     */
+    private function buildSign($data = '')
+    {
+        $mysign = "";
+        switch (strtoupper(trim($this->getConfig('sign_type')))) {
+            case "MD5":
+                $mysign = SignUtils::md5Sign($data . $this->getConfig('md5_key'));
+                break;
+            case "RSA" :
+                $mysign = SignUtils::rsaSign($data, $this->getConfig('rsa_private_path'));
+                break;
+            default:
+                $mysign = "";
+        }
+        return $mysign;
+    }
+    
+    /**
+     * 校验签名
+     *
+     * @author Ruesin
+     */
+    private function verifySign($data = '', $sign = '')
+    {
+        switch (strtoupper(trim($this->getConfig('sign_type')))) {
+            case "MD5":
+                return SignUtils::md5Verify($data . $this->getConfig('md5_key'), $sign);
+                break;
+            case "RSA" :
+                return SignUtils::rsaVerify($data,$this->getConfig('rsa_public_path'),$sign);
+                break;
+            default:
+                return false;
+        }
+        return false;
     }
     
     /**
@@ -192,12 +219,4 @@ class Malipay extends PayBase
         return $responseTxt;
     }
     
-    protected function setConfig($config = [])
-    {
-        if (! $config['sign_type'])
-            $config['sign_type'] = self::SIGN_TYPE;
-        if (! $config['input_charset'])
-            $config['input_charset'] = self::CHARSET;
-        parent::setConfig($config);
-    }
 }

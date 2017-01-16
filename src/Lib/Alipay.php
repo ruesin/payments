@@ -167,7 +167,7 @@ class Alipay extends PayBase
         $mysign = "";
         switch (strtoupper(trim($this->getConfig('sign_type')))) {
             case "MD5":
-                $mysign = md5($data . $this->getConfig('md5_key'));
+                $mysign = SignUtils::md5Sign($data . $this->getConfig('md5_key'));
                 break;
             case "RSA" :
                 $mysign = SignUtils::rsaSign($data, $this->getConfig('rsa_private_path'));
@@ -188,10 +188,10 @@ class Alipay extends PayBase
     {
         switch (strtoupper(trim($this->getConfig('sign_type')))) {
             case "MD5":
-                return (bool)(md5($data . $this->getConfig('md5_key')) == $sign);
+                return SignUtils::md5Verify($data . $this->getConfig('md5_key'), $sign);
                 break;
             case "RSA" :
-                return (bool)SignUtils::rsaVerify($data,$this->getConfig('rsa_public_path'),$sign);
+                return SignUtils::rsaVerify($data,$this->getConfig('rsa_public_path'),$sign);
                 break;
             default:
                 return false;
