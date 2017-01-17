@@ -163,10 +163,9 @@ class Unionpay extends PayBase
     }
     
     /**
-     * 延签证书信息
+     * 验签证书信息
      *
      * @author Ruesin
-     * @date 2017年1月11日
      */
     private function getPublic($key = '')
     {

@@ -21,7 +21,7 @@ class WxNative extends PayBase
         $form = array(
             'appid'       => $this->getConfig('appid'),
             'mch_id'      => $this->getConfig('mch_id'),
-            'device_info' => 'WEB',
+            'device_info' => isset($params['device']) ? $params['device'] : 'WEB',
             'nonce_str'   => StringUtils::createNonceString(),
             'sign'        => '',
             'body'        => $order['name'],
@@ -37,7 +37,7 @@ class WxNative extends PayBase
             'notify_url' => $this->getConfig('notify_url'),
             'trade_type' => 'NATIVE',
             'product_id' => $order['order_id'],
-            'limit_pay'  => '', //no_credit--指定不能使用信用卡支付
+            'limit_pay'  => isset($params['no_credit']) ? 'no_credit' : '', //no_credit--指定不能使用信用卡支付
         );
         
         if(isset($params['plat']) && $params['plat'] != 'web') {
@@ -67,7 +67,7 @@ class WxNative extends PayBase
         if ($result['return_code'] != 'SUCCESS') {
             return false;
         }
-        if (! $this->CheckSign($result)) {
+        if (! $this->verifySign($result)) {
             return false;
         }
         return $result;
@@ -88,16 +88,13 @@ class WxNative extends PayBase
     /**
      * 验签
      */
-    public function CheckSign($params)
+    public function verifySign($params)
     {
         if (! isset($params['sign']) || ! $params['sign']) {
             return false;
         }
         $sign = $this->buildSign($params);
-        if ($params['sign'] != $sign) {
-            return false;
-        }
-        return true;
+        return $params['sign'] == $sign;
     }
     
     public function back()
@@ -117,7 +114,7 @@ class WxNative extends PayBase
         if ($data['return_code'] != 'SUCCESS') {
             return false;
         }
-        if (! $this->CheckSign($data)) {
+        if (! $this->verifySign($data)) {
             return false;
         }
         
