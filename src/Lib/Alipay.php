@@ -41,7 +41,7 @@ class Alipay extends PayBase
      *
      * @author Ruesin
      */
-    public function buildRequestHtml($order = [], $params = [])
+    public function submit($order = [], $params = [])
     {
         $signParam = array(
             "service"      => self::SERVICE,

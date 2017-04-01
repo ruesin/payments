@@ -20,7 +20,7 @@ abstract class PayBase
         return $key ? (isset($this->config[$key]) ? $this->config[$key] : '') : $this->config;
     }
     
-    abstract function buildRequestHtml($order,$params);
+    abstract function submit($order,$params);
     abstract function notify();
     abstract function back();
 }

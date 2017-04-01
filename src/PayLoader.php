@@ -1,18 +1,29 @@
 <?php
 namespace Ruesin\Payments;
 
+/**
+ * Payments Class Loader 
+ *
+ * @method string submit()  提交
+ * @method array back() 同步
+ * @method array notify() 异步
+ * 
+ * @author Ruesin
+ */
 class PayLoader
 {
 
     const SPACE = '\Ruesin\Payments\Lib';
 
     private static $types = [
-        'alipay' => 'Alipay',
-        'malipay' => 'Malipay',
+        'alipay'   => 'Alipay',
+        'malipay'  => 'Malipay',
         'wxnative' => 'WxNative'
     ];
-
-    private static $payment = null;
+    
+    private static $_type = '';
+    private static $_config = [];
+    private static $_params = [];
 
     private static $_instance = null;
 
@@ -22,44 +33,15 @@ class PayLoader
     private function __clone()
     {}
 
-    private static function getInstance()
-    {
-        if (! (self::$_instance instanceof self)) {
-            self::$_instance = new self();
-        }
-        return self::$_instance;
-    }
-
     /**
-     * 初始化
+     * 获取实例
      *
      * @author Ruesin
      */
-    public static function init($type = '', $config = [], $params = [])
+    private static function getInstance($type = '', $config = [], $params = [])
     {
-        self::initPayment($type, $config, $params);
-        return self::getInstance();
-    }
-
-    /**
-     * 重新初始化
-     *
-     * @author Ruesin
-     */
-    public static function reInit($type = '', $config = [], $params = [])
-    {
-        self::$payment = null;
-        return self::init($type, $config, $params);
-    }
-
-    /**
-     * 初始化支付方式
-     *
-     * @author Ruesin
-     */
-    private static function initPayment($type = '', $config = [], $params = [])
-    {
-        if (self::$payment) return true;
+        
+        if (self::$_instance) return self::$_instance;
         
         $ltype = strtolower($type);
         
@@ -69,41 +51,58 @@ class PayLoader
             throw new \Exception('Payment does not exist!');
         }
         
-        self::$payment = new $class($config);
+        self::$_instance = new $class($config);
+        
+        return self::$_instance;
     }
-
+    
     /**
-     * 请求
+     * 初始化
      *
      * @author Ruesin
      */
-    public function submit($order = [], $params = [])
+    public static function init($type = '', $config = [], $params = [])
     {
-        return self::$payment->buildRequestHtml($order, $params);
+        if ($type != self::$_type || $config != self::$_config) {
+            self::clearInstance();
+        }
+        
+        return self::getInstance($type, $config, $params);
     }
-
+    
     /**
-     * 同步
+     * 清除实例
      *
      * @author Ruesin
      */
-    public function back()
+    public static function clearInstance()
     {
-        return self::$payment->back();
+        self::$_instance = null;
     }
-
-    /**
-     * 异步
-     *
-     * @author Ruesin
-     */
-    public function notify()
+    
+    public function __set($name, $value)
     {
-        return self::$payment->notify();
+        $instance = self::getInstance();
+        $instance->$name = $value;
     }
-
-    private static function formatParams($params)
+    
+    public function __get($name)
     {
-        return $params;
+        $instance = self::getInstance();
+        return $instance->$name;
     }
+    
+    public function __call($method, $parameters)
+    {
+        $instance = self::getInstance();
+        return call_user_func_array([$instance, $method], $parameters);
+    }
+    
+    public static function __callStatic($method, $parameters)
+    {
+        $instance = self::getInstance();
+        return call_user_func_array([$instance, $method], $parameters);
+    }
+    
+    
 }

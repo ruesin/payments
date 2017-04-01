@@ -16,7 +16,7 @@ class WxNative extends PayBase
      * @see https://pay.weixin.qq.com/wiki/doc/api/native.php?chapter=9_1
      *
      */
-    public function buildRequestHtml($order = [], $params = [])
+    public function submit($order = [], $params = [])
     {
         $form = array(
             'appid'       => $this->getConfig('appid'),

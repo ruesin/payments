@@ -14,7 +14,7 @@ class Unionpay extends PayBase
     // 前台交易请求地址
     const FRONT_TRANS_URL = 'https://101.231.204.80:5000/gateway/api/frontTransReq.do';
     
-    public function buildRequestHtml($order = [], $params = [])
+    public function submit($order = [], $params = [])
     {
         $signParams = [
             'version' => '5.0.0',//版本号
